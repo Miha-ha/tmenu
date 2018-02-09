@@ -10,11 +10,17 @@ type Menu struct {
 	itemsMap map[string]*MenuItem
 }
 
+type ActionParams struct {
+	Menu   *Menu
+	Item   *MenuItem
+	Update tgbotapi.Update
+}
+
 type MenuItem struct {
 	Text   string
 	Data   string
 	Tag    int
-	Action func(item *MenuItem, menu *Menu) *Menu
+	Action func(param *ActionParams) *Menu
 }
 
 func NewMenu(parent *Menu, items [][]*MenuItem) *Menu {
@@ -75,7 +81,11 @@ func (m *Menu) Draw(update tgbotapi.Update) tgbotapi.Chattable {
 func (m *Menu) Process(update tgbotapi.Update) *Menu {
 	if update.CallbackQuery != nil {
 		if item, ok := m.itemsMap[update.CallbackQuery.Data]; ok && item.Action != nil {
-			return item.Action(item, m)
+			return item.Action(&ActionParams{
+				Menu:   m,
+				Item:   item,
+				Update: update,
+			})
 		}
 	}
 
